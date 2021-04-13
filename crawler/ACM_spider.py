@@ -8,11 +8,10 @@ keyword = "computer science"
 i = 1
 output = []
 page_num = 0
-driver = webdriver.Chrome(executable_path='/Users/masterthesis/Downloads/chromedriver')
+driver = webdriver.Chrome(executable_path='/Users/masterthesis/Downloads/chromedriver-2')
 driver.get(
-        "https://dl.acm.org/action/doSearch?fillQuickSearch=false&expand=dl&field1=Keyword&text1=" +
-        keyword + "&field2=Abstract&text2=" + keyword + "&startPage="
-        + str(page_num) + "&pageSize=50")
+"https://dl.acm.org/action/doSearch?fillQuickSearch=false&ContentItemType=research-article&expand=dl&AllField=Keyword%3A%28"
++ keyword + "%29+AND+Abstract%3A%28" + keyword + "%29&pageSize=50&startPage=" + str(page_num) + "&AvailableFormat=lit%3Apdf")
 print(driver.title)
 num_of_articles = driver.find_element_by_class_name("hitsLength").text
 num_of_articles = num_of_articles.replace(',', '')
@@ -30,9 +29,9 @@ print("-------------------------------------------------------------------------
 
 for j in range(1, max_page_num + 1):
         driver.get(
-                "https://dl.acm.org/action/doSearch?fillQuickSearch=false&expand=dl&field1=Keyword&text1=" +
-                keyword + "&field2=Abstract&text2=" + keyword + "&startPage="
-                + str(page_num) + "&pageSize=50")
+                "https://dl.acm.org/action/doSearch?fillQuickSearch=false&ContentItemType=research-article&expand=dl&AllField=Keyword%3A%28"
+                + keyword + "%29+AND+Abstract%3A%28" + keyword + "%29&pageSize=50&startPage=" + str(page_num) + "&AvailableFormat=lit%3Apdf")
+
         articles = driver.find_elements_by_class_name("issue-item__content-right")
         for article in articles:
                 try:
@@ -52,15 +51,25 @@ for j in range(1, max_page_num + 1):
                 abstract_text = abstract.text
                 print(abstract_text)
 
-                downloads = driver.find_element_by_xpath(
-                        '//*[@id="pb-page-content"]/div/main/div[2]/article/div[1]/div[2]/div/div[5]/div/div[1]/div/ul/li[2]/span/span')
-                downloads_text = downloads.text
-                print(downloads_text)
+                try:
+                        downloads = driver.find_element_by_xpath(
+                                '//*[@id="pb-page-content"]/div/main/div[2]/article/div[1]/div[2]/div/div[5]/div/div[1]/div/ul/li[2]/span/span')
+                        downloads_text = downloads.text
+                        print(downloads_text)
+                except:
+                        downloads = driver.find_element_by_xpath(
+                                '/html/body/div[1]/div/main/div[2]/article/div[1]/div[2]/div/div[6]/div/div[1]/div/ul/li[2]/span/span')
+                        downloads_text = downloads.text
+                        print(downloads_text)
 
-                citations = driver.find_element_by_xpath(
-                        '//*[@id="pb-page-content"]/div/main/div[2]/article/div[1]/div[2]/div/div[5]/div/div[1]/div/ul/li[1]/span/span[1]')
-                citations_text = citations.text
-                print(citations_text)
+                try:
+                        citations = driver.find_element_by_xpath(
+                                '//*[@id="pb-page-content"]/div/main/div[2]/article/div[1]/div[2]/div/div[5]/div/div[1]/div/ul/li[1]/span/span[1]')
+                        citations_text = citations.text
+                        print(citations_text)
+                except:
+                        citations = "0"
+                        citations_text = citations
 
                 date = driver.find_element_by_xpath(
                         '//*[@id="pb-page-content"]/div/main/div[2]/article/div[1]/div[2]/div/div[4]/div/span[2]/span')
@@ -128,4 +137,4 @@ output['total_citations'] = output.total_citations.str.replace(',', '')
 output['total_citations'] = output['total_citations'].astype('int')
 output['total_downloads'] = output.total_downloads.str.replace(',', '')
 output['total_downloads'] = output['total_downloads'].astype('int')
-output.to_excel("output.xlsx", index=False)
+output.to_excel("ACM_output.xlsx", index=False)
