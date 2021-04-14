@@ -13,23 +13,24 @@ stops = set(stopwords.words("english"))
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 
-
+# importing the file
 file = pd.read_excel('ACM_output.xlsx')
 
-################### Clustering: ###################
+# choosing the abstract column
 file['Abstract'] = file.abstract
 
+# lowercase function
 def convert_lower_case(data):
     data['Abstract'] = data['Abstract'].str.lower()
     return data
 
-
+# function to remove the stop words
 def remove_stop_words(data):
     for i in range(1000):
         data['Abstract'][i] = remove_stopwords(data['Abstract'][i])
     return data
 
-
+# function to remove the punctuations
 def remove_punctuation(data):
     spec_chars = ["!", '"', "#", "%", "&", "'", "(", ")",
                   "*", "+", ",", "-", ".", "/", ":", ";", "<",
@@ -39,7 +40,7 @@ def remove_punctuation(data):
         data['Abstract'] = data['Abstract'].str.replace(char, '')
     return data
 
-
+# function to reduce the words to their word stem, base or root form
 def stemming(data):
     stemmer = PorterStemmer()
     for i in range(1000):
@@ -50,7 +51,7 @@ def stemming(data):
         data.Abstract[i] = new_text
     return data
 
-
+# function to convert absolute numbers to their text form like 100 -> hundred
 def convert_numbers(data):
     for i in range(1000):
         tokens = word_tokenize(str(data.Abstract[i]))
@@ -65,15 +66,15 @@ def convert_numbers(data):
         data.Abstract[i] = new_text
     return data
 
-
+# putting all of the above functions into one function
 def preprocess(data):
-    data = convert_lower_case(data)
+    data = convert_lower_case(data)  # lower case the text
     data = remove_punctuation(data)  # remove comma separately
-    data = remove_stop_words(data)
-    data = convert_numbers(data)
-    data = stemming(data)
-    data = remove_punctuation(data)
-    data = convert_numbers(data)
+    data = remove_stop_words(data)  # removing the stop words
+    data = convert_numbers(data)  # converting numbers to actual words like 100 to hundred
+    data = stemming(data)  # reducing words to their word stem, base or root form
+    data = remove_punctuation(data)  # removing the punctuations like comma, periods, etc.
+    data = convert_numbers(data) # converting numbers to actual words like 100 to hundred
     data = stemming(data)  # needed again as we need to stem the words
     data = remove_punctuation(data)  # needed again as num2word is giving few hyphens and commas fourty-one
     data = remove_stop_words(data)  # needed again as num2word is giving stop words 101 - one hundred and one
@@ -81,8 +82,6 @@ def preprocess(data):
 file = preprocess(file)
 
 #  calculating TF-IDF:
-
-
 articles = list(file['Abstract'])
 
 vectorizer = TfidfVectorizer(stop_words='english')
@@ -92,12 +91,11 @@ df = df.sort_values('TF-IDF', ascending=False)
 print(df.head(25))
 
 #  Text Clustering:
-
-
-true_k = 4
-model = KMeans(n_clusters=true_k, init='k-means++', max_iter=500, n_init=10)
+true_k = 4  # specify number of clusters  --> starts from 0
+model = KMeans(n_clusters=true_k, init='k-means++', max_iter=500, n_init=10) # specify parameters in k-mean algorithm
 model.fit(X)
 
+# finding the top terms in each cluster
 print("Top terms per cluster:")
 order_centroids = model.cluster_centers_.argsort()[:, ::-1]
 terms = vectorizer.get_feature_names()
@@ -108,6 +106,8 @@ for i in range(true_k):
         print(' %s' % terms[ind]),
     print
 
+
+# putting the cluster number and top terms into the output
 file['cluster_nr'] = ''
 file['cluster_key_terms'] = ''
 for i in range(1000):
@@ -125,7 +125,8 @@ for i in range(1000):
     if file.cluster_nr[i] == 3:
         for ind in order_centroids[3, :10]:
             file.cluster_key_terms[i] = file.cluster_key_terms[i] + " " + terms[ind]
-print(file.Abstract, file.cluster_nr)
+
+print(file.Abstract, file.cluster_nr) # printing the abstract and cluster number
 # file.to_excel('clustering_outpu.xlsx', index=False)
-del file['Abstract']
-file.to_excel("clustering_output_13_04_2021.xlsx", index=False)
+del file['Abstract'] # deletign the extra column which was generated during the code
+file.to_excel("clustering_output_13_04_2021.xlsx", index=False) # exporting the output into excel
